@@ -1,43 +1,51 @@
 # Arquivo: app/chat_handler.py
 from app.nlp_handler import NLPHandler
+from app.ml_handler import MLHandler
 
 class ChatHandler:
     def __init__(self):
         from app.responses import responses
         self.responses = responses
         self.nlp_handler = NLPHandler()
+        self.ml_handler = MLHandler()
     
     def get_response(self, message):
         # Processa a mensagem com NLP
         nlp_result = self.nlp_handler.process_message(message)
         
-        # Verifica sentimento
-        sentiment = nlp_result['sentiment']
+        # Obtém a intenção usando ML
+        ml_result = self.ml_handler.predict_intent(message)
         
-        # Procura por entidades nomeadas
-        entities = nlp_result['entities']
+        # Lógica de resposta baseada na intenção
+        intent = ml_result['intent']
+        confidence = ml_result['confidence']
         
-        # Procura por tópicos principais
-        topics = self.nlp_handler.get_main_topics(message)
+        # Se a confiança for alta, usa resposta baseada na intenção
+        if confidence > 0.6:
+            if intent == "greeting":
+                return "Olá! Como posso ajudar você hoje?"
+            elif intent == "goodbye":
+                return "Até logo! Tenha um ótimo dia!"
+            elif intent == "about_bot":
+                return "Sou um chatbot com recursos de ML e NLP, criado para ajudar e aprender!"
+            elif intent == "thanks":
+                return "Por nada! Fico feliz em ajudar!"
+            elif intent == "help":
+                return "Claro! Me diga mais especificamente como posso ajudar."
+            elif intent == "mood":
+                sentiment = nlp_result['sentiment']
+                if sentiment == 'positive':
+                    return "Que bom que você está bem! Posso ajudar em algo?"
+                elif sentiment == 'negative':
+                    return "Sinto muito que você não esteja bem. Quer conversar sobre isso?"
+                else:
+                    return "Entendo. Como posso ajudar você hoje?"
+            elif intent == "technical":
+                return "Posso ajudar com informações técnicas. Qual é sua dúvida específica?"
         
-        # Lógica de resposta melhorada
+        # Se a confiança for baixa, usa a lógica anterior
         message = message.lower().strip()
         
-        # Responde baseado em entidades encontradas
-        if entities:
-            for entity, label in entities:
-                if label == 'PER':  # Pessoa
-                    return f"Você mencionou {entity}. Infelizmente não tenho informações específicas sobre pessoas."
-                elif label == 'LOC':  # Local
-                    return f"Você mencionou o local {entity}. Gostaria de saber algo específico sobre ele?"
-        
-        # Responde baseado no sentimento
-        if sentiment == 'positive' and message not in self.responses:
-            return "Que bom que você está com um sentimento positivo! Como posso ajudar a manter esse astral?"
-        elif sentiment == 'negative' and message not in self.responses:
-            return "Sinto muito por você estar se sentindo assim. Posso tentar ajudar de alguma forma?"
-        
-        # Verifica se há uma resposta exata
         if message in self.responses:
             return self.responses[message]
         
@@ -45,10 +53,6 @@ class ChatHandler:
         for key in self.responses:
             if key in message:
                 return self.responses[key]
-        
-        # Se encontrou tópicos mas não tem resposta específica
-        if topics:
-            return f"Vejo que você está falando sobre {', '.join(topics)}. Pode elaborar melhor sua pergunta?"
         
         # Resposta padrão
         return "Desculpe, não entendi completamente. Pode reformular sua pergunta?"

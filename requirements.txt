@@ -2,3 +2,7 @@ flask
 flask-cors
 python-dotenv
 spacy
+scikit-learn
+numpy
+pandas
+joblib
