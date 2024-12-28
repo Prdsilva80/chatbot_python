@@ -19,8 +19,16 @@ def chat():
         message = data['message']
         response = chat_handler.get_response(message)
         
+        # Processa a mensagem com NLP para informações adicionais
+        nlp_info = chat_handler.nlp_handler.process_message(message)
+        
         return jsonify({
-            'response': response
+            'response': response,
+            'nlp_analysis': {
+                'entities': nlp_info['entities'],
+                'sentiment': nlp_info['sentiment'],
+                'tokens': nlp_info['tokens'][:5]  # Primeiros 5 tokens como exemplo
+            }
         })
     
     except Exception as e:
