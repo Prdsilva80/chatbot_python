@@ -6,7 +6,7 @@ from flask import render_template_string
 main = Blueprint('main', __name__)
 chat_handler = ChatHandler()
 
-# Arquivo: app/routes.py (atualizado)
+# Arquivo: app/routes.py
 @main.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -20,21 +20,27 @@ def chat():
         message = data['message']
         response = chat_handler.get_response(message)
         
-        # Processa a mensagem com NLP e ML
+        # Análises completas
         nlp_info = chat_handler.nlp_handler.process_message(message)
         ml_info = chat_handler.ml_handler.predict_intent(message)
+        sentiment_info = chat_handler.sentiment_handler.analyze_detailed(message)
         
         return jsonify({
             'response': response,
             'analysis': {
                 'nlp': {
                     'entities': nlp_info['entities'],
-                    'sentiment': nlp_info['sentiment'],
                     'tokens': nlp_info['tokens'][:5]
                 },
                 'ml': {
                     'intent': ml_info['intent'],
                     'confidence': ml_info['confidence']
+                },
+                'sentiment': {
+                    'category': sentiment_info['category'],
+                    'score': sentiment_info['score'],
+                    'intensity': sentiment_info['intensity'],
+                    'emojis': sentiment_info['emojis_found']
                 }
             }
         })
